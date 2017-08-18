@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">BLE</string>
+    <string name="connected">已连接</string>
+    <string name="search_ble">查找设备</string>
+    <string name="confirm_to_disconnect">确定断开设备</string>
+    <string name="bluetooth_close">蓝牙未开启，请打开</string>
+    <string name="ble_pairing">BLE配对</string>
+</resources>
