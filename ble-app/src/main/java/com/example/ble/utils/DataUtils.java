@@ -2,8 +2,6 @@ package com.example.ble.utils;
 
 import android.os.Bundle;
 
-import com.example.ble.application.App;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,7 +12,7 @@ public class DataUtils {
     /**
      * 单例模式
      */
-    static DataUtils instance;// 句柄
+    private static DataUtils instance;// 句柄
 
     private DataUtils() {
     }
@@ -28,21 +26,19 @@ public class DataUtils {
     /**
      * 数据
      */
-    double currentSpeed = 0, preSpeed = 0;// 主动上报的速度
-    int currentPower = 100, prePower = 100;// 主动上报电量
-    public List<Double> arraySpeed = new ArrayList<Double>();// 速度数组
+    private double mCurrentSpeed = 0, mPreSpeed = 0;// 主动上报的速度
+    private int mCurrentPower = 100, mPrePower = 100;// 主动上报电量
+    private List<Double> arraySpeed = new ArrayList<Double>();// 速度数组
 
     public void setCurrentPower(int currentPower) {
-        this.currentPower = currentPower;
+        mCurrentPower = currentPower;
         //发送更新电量广播
-        if (Math.abs(this.currentPower - prePower) >= 0
-                || this.currentPower == 0) {
-            prePower = this.currentPower;
+        if (Math.abs(mCurrentPower - mPrePower) >= 0 || mCurrentPower == 0) {
+            mPrePower = mCurrentPower;
             Bundle bundle = new Bundle();
-            bundle.putInt("power", this.currentPower);
+            bundle.putInt("power", this.mCurrentPower);
             BroadcastUtils.getInstance().sendSystemBroadcast(ConstantUtils.ACTION_UPDATE_POWER, bundle);//更新电量广播
-
-            if (this.currentPower - prePower > 6) {//电量突然增大
+            if (mCurrentPower - mPrePower > 6) {//电量突然增大
                 BroadcastUtils.getInstance().sendSystemBroadcast(ConstantUtils.ACTION_CHARGE_POWER, bundle);//充电中
             }
         }
@@ -51,20 +47,21 @@ public class DataUtils {
     public void setCurrentSpeed(double currentSpeed) {
         currentSpeed = currentSpeed - 1;
         if (currentSpeed < 0) currentSpeed = 0;
-        this.currentSpeed = currentSpeed > ConfigUtils.getInstance().getSpeedMax() ? ConfigUtils.getInstance().getSpeedMax() : currentSpeed;
-        preSpeed = this.currentSpeed;
+        //mCurrentSpeed = currentSpeed > ConfigUtils.getInstance().getSpeedMax() ? ConfigUtils.getInstance().getSpeedMax() : currentSpeed;
+        mCurrentSpeed = currentSpeed;
+        mPreSpeed = mCurrentSpeed;
 
         //发送更新速度广播
         Bundle bundle = new Bundle();
-        bundle.putDouble("speed", this.currentSpeed);
+        bundle.putDouble("speed", mCurrentSpeed);
         BroadcastUtils.getInstance().sendSystemBroadcast(ConstantUtils.ACTION_UPDATE_SPEED, bundle);
         //保存速度数组
         //if (App.app.isStartMileage()) {
-            addData(this.currentSpeed);
+            addData(mCurrentSpeed);
        // }
     }
 
-    void addData(double speed) {
+    public void addData(double speed) {
         arraySpeed.add(speed);
     }
 

@@ -3,9 +3,9 @@ package com.example.ble.utils;
 import android.graphics.Color;
 
 public class InstructionsUtils {
-    String speedInstructions = "6807000d00000000010100010100000000000016";
-    String lightInstructions = "68090004ff000001000016";
-    static InstructionsUtils instance;
+    private String speedInstructions = "6807000d00000000010100010100000000000016";
+    private String lightInstructions = "68090004ff000001000016";
+    private static InstructionsUtils instance;
 
     private InstructionsUtils() {
     }
@@ -21,12 +21,15 @@ public class InstructionsUtils {
     }
 
     /**
-     * 获取注册指令(没有使用)
+     * 获取注册指令, 蓝牙注册之后发送数据, 只有有了特征值才能发送数据
+     * 帧头 指令类型 数据长度(BCD) 状态  时间(BCD)      校验和(BCD) 结束
+     * 68     01      00 08      01  00000000000000  xx xx      16
      *
      * @return 注册指令
      */
     public String getRegisterInstructions() {
-        return replaceValidateCode("680100080100000000000000000016");
+        return replaceValidateCode("680100080120170828000000000016");
+        //return replaceValidateCode("680100080100000000000000000016");
     }
 
     /**
@@ -106,8 +109,8 @@ public class InstructionsUtils {
      * @return
      */
 
-    public boolean DecodeRegisterInstructionsBack(String str) {
-        if (str == null || str.equals("") || !validateInstruction(str)) {
+    public boolean decodeRegisterInstructionsBack(String str) {
+        if (str == null || str.equals("")) { //!validateInstruction(str)
             return false;
         }
         String instructionsStyle = str.substring(2, 4);
@@ -122,7 +125,7 @@ public class InstructionsUtils {
      *
      * @param str 主动上报指令
      */
-    public void DecodeAutoReportInstructions(String str) {
+    public void decodeAutoReportInstructions(String str) {
         if (str == null || str.equals("") || !validateInstruction(str)) {
             return;
         }
@@ -140,10 +143,10 @@ public class InstructionsUtils {
     }
 
     /**
-     * 替换校验码
+     * 替换校验和
      *
      * @param str 校验前的指令
-     * @return 修改校验码后的指令
+     * @return 修改校验和后的指令
      */
     public String replaceValidateCode(String str) {
         if (str == null || str.equals("")) {
@@ -170,7 +173,7 @@ public class InstructionsUtils {
     }
 
     /**
-     * 校验校验码
+     * 校验校验和
      */
     public boolean validateInstruction(String str) {
         if (str == null || str.equals("")) {
@@ -178,7 +181,6 @@ public class InstructionsUtils {
         }
         String objectStr = str.substring(0, str.length() - 6);
         String currentCode = str.substring(str.length() - 6, str.length() - 2);
-
 
         objectStr = objectStr.toUpperCase();
         int length = objectStr.length() / 2;
@@ -198,5 +200,4 @@ public class InstructionsUtils {
         String caluateCode = sb.toString();
         return caluateCode.equalsIgnoreCase(currentCode);
     }
-
 }

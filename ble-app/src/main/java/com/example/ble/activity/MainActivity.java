@@ -23,6 +23,7 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.ble.application.App;
 import com.example.ble.controller.BluetoothController;
 import com.example.ble.service.BLEService;
 import com.example.ble.utils.BroadcastUtils;
@@ -245,17 +246,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 switch (speed) {
                     case 6://6km/h
                         instruction.setMaxSpeedInstructions(1);
+                        LogUtils.i("发送速度指令" + instruction.getMaxSpeedInstructions());
                         sender.write(converter.hexStringToBytes(instruction.getMaxSpeedInstructions()));//发指令给串口
                         break;
                     case 10://10km/h
                         instruction.setMaxSpeedInstructions(2);
+                        LogUtils.i("发送速度指令" + instruction.getMaxSpeedInstructions());
                         sender.write(converter.hexStringToBytes(instruction.getMaxSpeedInstructions()));
                         break;
                     case 15://15km/h
                         instruction.setMaxSpeedInstructions(3);
+                        LogUtils.i("发送速度指令" + instruction.getMaxSpeedInstructions());
                         sender.write(converter.hexStringToBytes(instruction.getMaxSpeedInstructions()));
                         break;
                     case 20://20km/h
+                        LogUtils.i("发送速度指令" + instruction.getMaxSpeed20());
                         sender.write(converter.hexStringToBytes(instruction.getMaxSpeed20()));
                         break;
                     default:
@@ -353,9 +358,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             .setName(intent.getStringExtra("name"))
                             .setAddress(intent.getStringExtra("address"))
                             .saveConfig();
+                    LogUtils.e("连接成功");
                     //发送注册信息
-                    BluetoothController.getInstance().write(ConvertUtils.getInstance()
-                            .hexStringToBytes(InstructionsUtils.getInstance().getRegisterInstructions()));
+                    if (!App.getRegistered()) {//未注册
+                        LogUtils.e("发送注册指令:"+ InstructionsUtils.getInstance().getRegisterInstructions());
+                        //发送注册指令
+                        BluetoothController.getInstance().write(ConvertUtils.getInstance().hexStringToBytes(InstructionsUtils.getInstance().getRegisterInstructions()));
+                    }
                     if (BluetoothController.getInstance().isConnected()) {//已连接
                         btnConnect.setText(getResources().getString(R.string.connected));
                         initData();
@@ -369,6 +378,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             .saveConfig();
                     LogUtils.e("蓝牙"+intent.getStringExtra("address")+","
                             +intent.getStringExtra("name")+","+"连接失败或者异常断开");
+                    App.setRegistered(false);
                     intent.getStringExtra("name");
                     //搜索蓝牙
                     BLEService.setStartService();
@@ -382,7 +392,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             .setName("")
                             .setAddress("")
                             .saveConfig();
-                    LogUtils.e("hello"+intent.getStringExtra("address")+","+intent.getStringExtra("name"));
+                    LogUtils.e("手动断开连接: "+intent.getStringExtra("address")+","+intent.getStringExtra("name"));
+                    App.setRegistered(false);
                     intent.getStringExtra("name");
                     btnConnect.setText(getResources().getString(R.string.search_ble));
                     initData();

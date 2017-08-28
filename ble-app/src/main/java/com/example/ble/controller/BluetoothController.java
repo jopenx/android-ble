@@ -14,6 +14,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 
+import com.example.ble.application.App;
 import com.example.ble.common.IState;
 import com.example.ble.utils.BroadcastUtils;
 import com.example.ble.utils.ConstantUtils;
@@ -59,12 +60,19 @@ public class BluetoothController {
                 //接收蓝牙主动上报消息
                 case ConstantUtils.WM_RECEIVE_REPORT_MSG_FROM_BLE:
                     if (msg.obj == null) return;
-                    InstructionsUtils.getInstance().DecodeAutoReportInstructions(msg.obj.toString());
+                    InstructionsUtils.getInstance().decodeAutoReportInstructions(msg.obj.toString());
                     break;
                 case ConstantUtils.WM_RECEIVE_REGISTOR_MSG_FROM_BLE:
                     if (msg.obj == null) return;
-                    boolean b = InstructionsUtils.getInstance().DecodeRegisterInstructionsBack(msg.obj.toString());
+                    boolean b = InstructionsUtils.getInstance().decodeRegisterInstructionsBack(msg.obj.toString());
                     LogUtils.e("注册指令回码: " + b);
+                    if (b) {
+                        App.setRegistered(b);
+                    } else {
+                        LogUtils.e("发送注册指令:"+ InstructionsUtils.getInstance().getRegisterInstructions());
+                        //发送注册指令
+                        BluetoothController.getInstance().write(ConvertUtils.getInstance().hexStringToBytes(InstructionsUtils.getInstance().getRegisterInstructions()));
+                    }
                 default:
                     break;
             }
@@ -121,7 +129,7 @@ public class BluetoothController {
             if (status == 0) {
                 bluetoothGatt = gatt;
                 state = IState.CONNECT_SUCCESS;
-                BluetoothController.this.findService(gatt.getServices());
+                findService(gatt.getServices());
                 runOnMainThread(new Runnable() {
                     @Override
                     public void run() {
@@ -172,43 +180,44 @@ public class BluetoothController {
                 //注册指令主板回码
                 if ((arrayOfByte[0] == ConstantUtils.INSTRUCTIONS_APP_START//指令帧头
                         && arrayOfByte[1] == ConstantUtils.INSTRUCTIONS_BLE_REGISTER_BACK_ZHANGLIN)//注册指令主板回码
-                        && BluetoothController.this.autoReportCnt == 0) {//注册回码
-                    if (BluetoothController.this.serviceHandler != null) {
+                        && autoReportCnt == 0) {//注册回码
+                    LogUtils.i("注册指令主板回码:" + arrayOfString);
+                    if (serviceHandler != null) {
                         Message msg = new Message();
                         msg.what = ConstantUtils.WM_RECEIVE_REGISTOR_MSG_FROM_BLE;//接收蓝牙注册回码消息
-                        msg.obj = arrayOfString;//byte数组转十六进制字符串
-                        BluetoothController.this.serviceHandler.sendMessage(msg);
+                        msg.obj = arrayOfString.substring(0, 32);//byte数组转十六进制字符串
+                        serviceHandler.sendMessage(msg);
                     }
                     //主板主动上报指令
                 } else if ((arrayOfByte[0] == ConstantUtils.INSTRUCTIONS_APP_START//指令帧头
                         && arrayOfByte[1] == ConstantUtils.INSTRUCTIONS_BLE_AUTO_REPORT)//主板主动上报指令
-                        || BluetoothController.this.autoReportCnt > 0) {//主动上报
-                    BluetoothController.this.autoReportCnt++;
-                    if (BluetoothController.this.autoReportCnt <= 3) {
+                        || autoReportCnt > 0) {//主动上报
+                    autoReportCnt++;
+                    if (autoReportCnt <= 3) {
                         String temp = arrayOfString;
-                        if (BluetoothController.this.autoReportCnt == 3)
+                        if (autoReportCnt == 3)
                             temp = temp.substring(0, 18);
-                        BluetoothController.this.autoReportData = BluetoothController.this.autoReportData + temp;
+                        autoReportData = autoReportData + temp;
                     }
-                    if (BluetoothController.this.serviceHandler != null && BluetoothController.this.autoReportCnt == 3) {
-                        int length = BluetoothController.this.autoReportData.length();
+                    if (serviceHandler != null && autoReportCnt == 3) {
+                        int length = autoReportData.length();
                         if (length != 98) {
-                            BluetoothController.this.autoReportCnt = 0;
-                            BluetoothController.this.autoReportData = "";
+                            autoReportCnt = 0;
+                            autoReportData = "";
                             return;
                         }
-                        String resultValue = BluetoothController.this.autoReportData.substring(96, 98);
+                        String resultValue = autoReportData.substring(96, 98);
                         if (!resultValue.equalsIgnoreCase("16")) {
-                            BluetoothController.this.autoReportCnt = 0;
-                            BluetoothController.this.autoReportData = "";
+                            autoReportCnt = 0;
+                            autoReportData = "";
                             return;
                         }
                         Message msg = new Message();
                         msg.what = ConstantUtils.WM_RECEIVE_REPORT_MSG_FROM_BLE;//接收蓝牙主动上报消息
-                        msg.obj = BluetoothController.this.autoReportData;
-                        BluetoothController.this.serviceHandler.sendMessage(msg);
-                        BluetoothController.this.autoReportCnt = 0;
-                        BluetoothController.this.autoReportData = "";
+                        msg.obj = autoReportData;
+                        serviceHandler.sendMessage(msg);
+                        autoReportCnt = 0;
+                        autoReportData = "";
                     }
                 }
             }

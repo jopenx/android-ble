@@ -15,8 +15,8 @@ public class ConstantUtils {
 
     //指令帧头
     public final static int INSTRUCTIONS_APP_START = 104;
-//  //app注册指令
-//  public final static int INSTRUCTIONS_APP_REGISTER = 1;
+    //app注册指令
+    public final static int INSTRUCTIONS_APP_REGISTER = 1;
     //注册指令主板回码
     public final static int INSTRUCTIONS_BLE_REGISTER_BACK_ZHANGLIN = 1;
     //主板主动上报指令
@@ -30,8 +30,6 @@ public class ConstantUtils {
     //app 灯光设置指令
     public final static int INSTRUCTIONS_APP_LIGHT_SETTING = 9;
 
-    //蓝牙连接状态改变
-    //public final static int WM_BLE_CONNECTED_STATE_CHANGE = 1;
     //接收蓝牙注册回码消息
     public final static int WM_RECEIVE_REGISTOR_MSG_FROM_BLE = 4;
     //接收蓝牙主动上报消息

@@ -7,8 +7,11 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
 
+import com.example.ble.application.App;
 import com.example.ble.controller.BluetoothController;
 import com.example.ble.utils.ConfigUtils;
+import com.example.ble.utils.ConvertUtils;
+import com.example.ble.utils.InstructionsUtils;
 import com.example.ble.utils.LogUtils;
 
 /**
@@ -47,15 +50,22 @@ public class BLEService extends Service {
     Runnable mBackgroundRunnable = new Runnable() {
         @Override
         public void run() {
-            while (isStart && (!ConfigUtils.getInstance().getAddress().isEmpty())) {
+            while (isStart && !ConfigUtils.getInstance().getAddress().equals("")
+                    && !(ConfigUtils.getInstance().getAddress() != null)) {
                 if (BluetoothController.getInstance().isConnected()) {//已经连接
+                    if (!App.getRegistered()) {//未注册
+                        //发送注册信息
+                        BluetoothController.getInstance().write(ConvertUtils.getInstance().hexStringToBytes(InstructionsUtils.getInstance().getRegisterInstructions()));
+                    }
                     return;
                 }
                 //未连接
                 LogUtils.e("未连接:" + ConfigUtils.getInstance().getAddress() + ", 自动重连");
-                BluetoothController.getInstance().disconnect();
-                BluetoothController.getInstance().connect(
-                        ConfigUtils.getInstance().getAddress(), ConfigUtils.getInstance().getName());
+                if (ConfigUtils.getInstance().getAddress()!=null && ConfigUtils.getInstance().getName()!=null){
+                    BluetoothController.getInstance().disconnect();
+                    BluetoothController.getInstance().connect(
+                            ConfigUtils.getInstance().getAddress(), ConfigUtils.getInstance().getName());
+                }
                 try {
                     Thread.sleep(60000);//延迟1分钟重新请求
                 } catch (InterruptedException e) {
