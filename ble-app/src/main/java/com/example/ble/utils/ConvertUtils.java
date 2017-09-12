@@ -104,5 +104,4 @@ public class ConvertUtils {
         else
             return String.format("%.0f", value);
     }
-
 }

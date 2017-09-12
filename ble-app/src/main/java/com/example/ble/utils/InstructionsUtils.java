@@ -28,8 +28,7 @@ public class InstructionsUtils {
      * @return 注册指令
      */
     public String getRegisterInstructions() {
-        return replaceValidateCode("680100080120170828000000000016");
-        //return replaceValidateCode("680100080100000000000000000016");
+        return replaceValidateCode("680100080100000000000000000016");
     }
 
     /**
@@ -143,10 +142,10 @@ public class InstructionsUtils {
     }
 
     /**
-     * 替换校验和
+     * 替换校验码
      *
      * @param str 校验前的指令
-     * @return 修改校验和后的指令
+     * @return 修改校验码后的指令
      */
     public String replaceValidateCode(String str) {
         if (str == null || str.equals("")) {
@@ -172,8 +171,9 @@ public class InstructionsUtils {
         return sb2.toString();
     }
 
+
     /**
-     * 校验校验和
+     * 校验校验码
      */
     public boolean validateInstruction(String str) {
         if (str == null || str.equals("")) {
@@ -181,6 +181,7 @@ public class InstructionsUtils {
         }
         String objectStr = str.substring(0, str.length() - 6);
         String currentCode = str.substring(str.length() - 6, str.length() - 2);
+
 
         objectStr = objectStr.toUpperCase();
         int length = objectStr.length() / 2;

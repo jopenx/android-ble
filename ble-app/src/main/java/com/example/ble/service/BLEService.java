@@ -18,6 +18,7 @@ import com.example.ble.utils.LogUtils;
  * 蓝牙服务
  */
 public class BLEService extends Service {
+    private boolean isFirstAutoConnect = true;
     private static boolean isStart = true;
     private Handler mHandler;
     @Override
@@ -41,9 +42,8 @@ public class BLEService extends Service {
 
     //每次服务启动时回调
     @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
+    public void onStart(Intent intent, int startId) {
         mHandler.post(mBackgroundRunnable);//将线程post到Handler中
-        return super.onStartCommand(intent, flags, startId);
     }
 
     //实现耗时操作的线程
@@ -57,17 +57,16 @@ public class BLEService extends Service {
                         //发送注册信息
                         BluetoothController.getInstance().write(ConvertUtils.getInstance().hexStringToBytes(InstructionsUtils.getInstance().getRegisterInstructions()));
                     }
-                    return;
-                }
-                //未连接
-                LogUtils.e("未连接:" + ConfigUtils.getInstance().getAddress() + ", 自动重连");
-                if (ConfigUtils.getInstance().getAddress()!=null && ConfigUtils.getInstance().getName()!=null){
-                    BluetoothController.getInstance().disconnect();
-                    BluetoothController.getInstance().connect(
-                            ConfigUtils.getInstance().getAddress(), ConfigUtils.getInstance().getName());
+                } else {//未连接
+                    if (!ConfigUtils.getInstance().getAddress().isEmpty() && isFirstAutoConnect) {//自动连接
+                        isFirstAutoConnect = false;
+                        BluetoothController.getInstance().connect(ConfigUtils.getInstance().getAddress(), ConfigUtils.getInstance().getName());
+                    } else {
+                        isFirstAutoConnect = false;
+                    }
                 }
                 try {
-                    Thread.sleep(60000);//延迟1分钟重新请求
+                    Thread.sleep(2000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
